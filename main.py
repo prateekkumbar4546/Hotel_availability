@@ -3,11 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.preprocessing import OneHotEncoder, StandardScaler, FunctionTransformer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
-from sklearn.pipeline import Pipeline
+from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.compose import ColumnTransformer
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.impute import SimpleImputer
@@ -25,21 +25,26 @@ print(train_data.isnull().sum())
 numeric_imputer = SimpleImputer(strategy='median')
 categorical_imputer = SimpleImputer(strategy='most_frequent')
 
-# Apply imputers
-train_data[numeric_features] = numeric_imputer.fit_transform(train_data[numeric_features])
-train_data[categorical_features] = categorical_imputer.fit_transform(train_data[categorical_features])
+# Create new features
+def create_features(df):
+    df['price_per_night'] = df['cost'] / df['minimum_nights']
+    df['review_frequency'] = df['reviews_per_month'] / df['number_of_reviews']
+    df['is_entire_home'] = df['accommodation_type'].apply(lambda x: 1 if x == 'Entire home/apt' else 0)
+    return df
 
-# Check distributions of numerical columns
-train_data[numeric_features].hist(bins=20, figsize=(14, 10))
-plt.show()
+# Apply the function to create new features
+train_data = create_features(train_data)
+
+# Check for null values again after creating new features
+print(train_data.isnull().sum())
 
 # Separate features and target variable from training data
 X = train_data.drop(columns=['yearly_availability'])
 y = train_data['yearly_availability']
 
 # Identify numerical and categorical features
-numeric_features = ['latitude', 'longitude', 'cost', 'minimum_nights', 'number_of_reviews', 'reviews_per_month', 'owned_hotels']
-categorical_features = ['region', 'accommodation_type']
+numeric_features = ['latitude', 'longitude', 'cost', 'minimum_nights', 'number_of_reviews', 'reviews_per_month', 'owned_hotels', 'price_per_night', 'review_frequency']
+categorical_features = ['region']
 
 # Create transformers for numerical and categorical data
 numeric_transformer = Pipeline(steps=[
@@ -125,6 +130,9 @@ if best_model_name == 'RandomForest':
 
 # Load the test data
 test_data = pd.read_csv('test.csv')
+
+# Apply the function to create new features for test data
+test_data = create_features(test_data)
 
 # Apply imputers to test data
 test_data[numeric_features] = numeric_imputer.transform(test_data[numeric_features])
