@@ -29,6 +29,7 @@ categorical_imputer = SimpleImputer(strategy='most_frequent')
 def create_features(df):
     df['price_per_night'] = df['cost'] / df['minimum_nights']
     df['review_frequency'] = df['reviews_per_month'] / df['number_of_reviews']
+    df['review_frequency'].replace([np.inf, -np.inf], 0, inplace=True)
     df['is_entire_home'] = df['accommodation_type'].apply(lambda x: 1 if x == 'Entire home/apt' else 0)
     return df
 
