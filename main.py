@@ -45,7 +45,7 @@ y = train_data['yearly_availability']
 
 # Identify numerical and categorical features
 numeric_features = ['latitude', 'longitude', 'cost', 'minimum_nights', 'number_of_reviews', 'reviews_per_month', 'owned_hotels', 'price_per_night', 'review_frequency']
-categorical_features = ['region']
+categorical_features = ['region', 'accommodation_type']
 
 # Create transformers for numerical and categorical data
 numeric_transformer = Pipeline(steps=[
