@@ -125,6 +125,28 @@ for name, model in best_models.items():
     rmse = np.sqrt(mean_squared_error(y_val, y_pred))
     print(f"RMSE for {name} on validation set: {rmse:.4f}")
 
+    # Feature importance visualization for RandomForest and XGBoost
+    if hasattr(model.named_steps['regressor'], 'feature_importances_'):
+        importances = model.named_steps['regressor'].feature_importances_
+        feature_names = (model.named_steps['preprocessor']
+                         .transformers_[0][1]
+                         .named_steps['scaler']
+                         .transform(X_train.select_dtypes(include=np.number).columns)
+                         .tolist()
+                         + model.named_steps['preprocessor']
+                         .transformers_[1][1]
+                         .named_steps['onehot']
+                         .get_feature_names_out(categorical_features))
+        
+        # Create a DataFrame for visualization
+        importance_df = pd.DataFrame({'Feature': feature_names, 'Importance': importances})
+        importance_df = importance_df.sort_values(by='Importance', ascending=False)
+        
+        plt.figure(figsize=(12, 8))
+        sns.barplot(x='Importance', y='Feature', data=importance_df)
+        plt.title(f'Feature Importance for {name}')
+        plt.show()
+
 # Load test data and apply best model for predictions
 test_data = pd.read_csv('test.csv')
 test_data = create_additional_features(test_data)
